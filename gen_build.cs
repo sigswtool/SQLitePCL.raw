@@ -1,5 +1,5 @@
 /*
-   Copyright 2014-2017 Zumero, LLC
+   Copyright 2014-2018 Zumero, LLC
 
    Licensed under the Apache License, Version 2.0 (the "License");
    you may not use this file except in compliance with the License.
@@ -25,7 +25,6 @@ public static class projects
 	// Each item in these Lists corresponds to a project file that will be
 	// generated.
 	//
-	public static List<config_sqlite3> items_sqlite3 = new List<config_sqlite3>();
 	public static List<config_cppinterop> items_cppinterop = new List<config_cppinterop>();
 	public static List<config_csproj> items_csproj = new List<config_csproj>();
 
@@ -38,8 +37,6 @@ public static class projects
 	//
 	public static void init()
 	{
-		init_sqlite3();
-
 		init_cppinterop();
 
         init_csproj();
@@ -49,30 +46,6 @@ public static class projects
 		init_testapps();
 
 		init_esqlite3();
-	}
-
-	private static void init_sqlite3()
-	{
-		items_sqlite3.Add(new config_sqlite3 { toolset="v110_xp", cpu="x86" });
-		items_sqlite3.Add(new config_sqlite3 { toolset="v110_xp", cpu="x64" });
-
-		items_sqlite3.Add(new config_sqlite3 { toolset="v110", cpu="arm" });
-		items_sqlite3.Add(new config_sqlite3 { toolset="v110", cpu="x64" });
-		items_sqlite3.Add(new config_sqlite3 { toolset="v110", cpu="x86" });
-
-		items_sqlite3.Add(new config_sqlite3 { toolset="v120", cpu="arm" });
-		items_sqlite3.Add(new config_sqlite3 { toolset="v120", cpu="x64" });
-		items_sqlite3.Add(new config_sqlite3 { toolset="v120", cpu="x86" });
-
-		items_sqlite3.Add(new config_sqlite3 { toolset="v140", cpu="arm" });
-		items_sqlite3.Add(new config_sqlite3 { toolset="v140", cpu="x64" });
-		items_sqlite3.Add(new config_sqlite3 { toolset="v140", cpu="x86" });
-
-		items_sqlite3.Add(new config_sqlite3 { toolset="v110_wp80", cpu="arm" });
-		items_sqlite3.Add(new config_sqlite3 { toolset="v110_wp80", cpu="x86" });
-
-		items_sqlite3.Add(new config_sqlite3 { toolset="v120_wp81", cpu="arm" });
-		items_sqlite3.Add(new config_sqlite3 { toolset="v120_wp81", cpu="x86" });
 	}
 
 	private static void init_cppinterop()
@@ -143,16 +116,6 @@ public static class projects
         items_csproj.Add(config_csproj.create_batteries("batteries_sqlcipher", ver, "net40", "sqlcipher"));
         items_csproj.Add(config_csproj.create_batteries("batteries_sqlcipher", ver, "net45", "sqlcipher"));
         items_csproj.Add(config_csproj.create_batteries("batteries_sqlcipher", ver, "uwp10", "sqlcipher"));
-
-        // bundle_zetetic
-        items_csproj.Add(config_csproj.create_internal_batteries("batteries_zetetic", ver, "ios_unified", "sqlcipher"));
-        // TODO items_csproj.Add(config_csproj.create_internal_batteries("batteries_zetetic", "watchos", "sqlcipher"));
-        //items_csproj.Add(config_csproj.create_batteries("batteries_zetetic", ver, "macos", "sqlcipher"));
-        items_csproj.Add(config_csproj.create_batteries("batteries_zetetic", ver, "android", "sqlcipher"));
-        //items_csproj.Add(config_csproj.create_batteries("batteries_zetetic", ver, "net35", "sqlcipher"));
-        //items_csproj.Add(config_csproj.create_batteries("batteries_zetetic", ver, "net40", "sqlcipher"));
-        items_csproj.Add(config_csproj.create_batteries("batteries_zetetic", ver, "net45", "sqlcipher"));
-        items_csproj.Add(config_csproj.create_batteries("batteries_zetetic", ver, "uwp10", "sqlcipher"));
 
         // the following item builds for netstandard11 
         // but overrides the nuget target env to place it in netcoreapp
@@ -374,7 +337,8 @@ public static class projects
         switch (toolset)
         {
             case "v110_xp":
-                return "win7";
+				// for our builds, v110_xp should always correspond to a win-whatever RID
+                return "win";
             case "v110":
                 return "win8";
             case "v110_wp80":
@@ -433,37 +397,6 @@ public static class projects
 			default:
 				throw new Exception(env);
 		}
-	}
-
-	public static config_sqlite3 find_sqlite3(string toolset, string cpu)
-	{
-		foreach (config_sqlite3 cfg in projects.items_sqlite3)
-		{
-			if (
-					(cfg.toolset == toolset)
-					&& (cfg.cpu == cpu)
-			   )
-			{
-				return cfg;
-			}
-		}
-		//throw new Exception();
-		return null;
-	}
-
-	public static List<config_sqlite3> find_sqlite3(string toolset)
-	{
-		var result = new List<config_sqlite3>();
-		foreach (config_sqlite3 cfg in projects.items_sqlite3)
-		{
-			if (
-					(cfg.toolset == toolset)
-			   )
-			{
-				result.Add(cfg);
-			}
-		}
-		return result;
 	}
 
 	public static config_csproj find(string area, string env)
@@ -606,76 +539,11 @@ public static class config_info_ext
 
 }
 
-public class config_sqlite3 : config_info
-{
-	public string toolset;
-	public string cpu;
-	public string guid;
-
-	private void add_product(List<string> a, string s)
-	{
-		a.Add(Path.Combine(get_name(), "bin", "release", s));
-	}
-
-	public void get_products(List<string> a)
-	{
-		add_product(a, "e_sqlite3.dll");
-	}
-
-	private string area()
-	{
-		return "sqlite3";
-	}
-
-    string rid()
-    {
-        return string.Format("{0}-{1}", projects.rid_front_half(toolset), cpu);
-    }
-
-	public string get_nuget_target_path()
-	{
-		return string.Format("runtimes\\{0}\\native\\", rid());
-	}
-
-	public string get_name()
-	{
-		return string.Format("{0}.{1}.{2}", area(), toolset, cpu);
-	}
-
-	public string get_project_filename()
-	{
-		return string.Format("{0}.vcxproj", get_name());
-	}
-
-	public string fixed_cpu()
-	{
-		if (cpu == "x86")
-		{
-			return "Win32";
-		}
-		else
-		{
-			return cpu;
-		}
-	}
-}
-
 public class config_cppinterop : config_info
 {
 	public string env;
 	public string cpu;
 	public string guid;
-
-	public config_sqlite3 get_sqlite3_item()
-	{
-		string toolset = projects.cs_env_to_toolset(env);
-		config_sqlite3 other = projects.find_sqlite3(toolset, cpu);
-		if (other == null)
-		{
-			throw new Exception(get_name());
-		}
-		return other;
-	}
 
 	private void add_product(List<string> a, string s)
 	{
@@ -739,16 +607,6 @@ public class config_esqlite3 : config_info
 	public string guid;
 	public string toolset;
 
-	public List<config_sqlite3> get_sqlite3_items()
-	{
-		List<config_sqlite3> other = projects.find_sqlite3(toolset);
-		if (other == null)
-		{
-			throw new Exception(get_name());
-		}
-		return other;
-	}
-
 	private void add_product(List<string> a, string s)
 	{
 		a.Add(Path.Combine(get_name(), "bin", "release", s));
@@ -795,8 +653,6 @@ public static class config_cs
         // framework name is full enough for project.json/frameworks.
 		switch (env)
 		{
-			case "ios_classic":
-				return "MonoTouch,Version=v1.0";
 			case "ios_unified":
 				return "Xamarin.iOS10";
 			case "macos":
@@ -842,8 +698,6 @@ public static class config_cs
 	{
 		switch (env)
 		{
-			case "ios_classic":
-				return "MonoTouch";
 			case "ios_unified":
 				return "Xamarin.iOS10";
 			case "macos":
@@ -970,7 +824,6 @@ public class config_csproj : config_info
         switch (env)
         {
             case "ios_unified":
-            case "ios_classic":
 			case "watchos":
                 cfg.name = string.Format("{0}.lib.{1}.{2}.{3}", cfg.root_name, what, env, "static");
                 break;
@@ -983,7 +836,6 @@ public class config_csproj : config_info
         cfg.env = env;
         switch (cfg.env)
         {
-            case "ios_classic":
             case "ios_unified":
             case "watchos":
                 switch (what)
@@ -1006,7 +858,6 @@ public class config_csproj : config_info
         switch (cfg.env)
         {
             case "ios_unified":
-            case "ios_classic":
             case "watchos":
                 switch (what)
                 {
@@ -1048,7 +899,6 @@ public class config_csproj : config_info
         switch (cfg.env)
         {
             case "ios_unified":
-            case "ios_classic":
             case "watchos":
                 switch (what)
                 {
@@ -1313,7 +1163,6 @@ public static class gen
 	private const string GUID_CPP = "{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}";
 	private const string GUID_FOLDER = "{2150E333-8FDC-42A3-9474-1A3956D46DE8}";
 	private const string GUID_PCL = "{786C830F-07A1-408B-BD7F-6EE04809D6DB}";
-	private const string GUID_IOS = "{6BC8ED88-2882-458C-8E55-DFD12B67127B}";
 	private const string GUID_WATCHOS = "{FC940695-DFE0-4552-9F25-99AF4A5619A1}";
 	private const string GUID_UNIFIED_IOS = "{FEACFBD2-3405-455C-9665-78FE426C6842}";
 	private const string GUID_UNIFIED_MAC = "{A3F8F2AB-B479-4A4A-A458-A89E7DC349F1}";
@@ -1339,11 +1188,6 @@ public static class gen
 		f.WriteStartElement("Compile");
 		f.WriteAttributeString("Include", path);
 		f.WriteEndElement(); // Compile
-	}
-
-	private static void write_cpp_includepath(XmlWriter f, string root, string s)
-	{
-		f.WriteElementString("IncludePath", string.Format("{0};$(IncludePath)", Path.Combine(root, s)));
 	}
 
 	private static void write_cpp_define(XmlWriter f, string s)
@@ -1547,12 +1391,6 @@ public static class gen
 					f.WriteEndElement(); // Import
 
 					break;
-				case "ios_classic":
-					f.WriteStartElement("Import");
-					f.WriteAttributeString("Project", "$(MSBuildExtensionsPath)\\Xamarin\\iOS\\Xamarin.MonoTouch.CSharp.targets");
-					f.WriteEndElement(); // Import
-
-					break;
 				case "android":
 					f.WriteStartElement("Import");
 					f.WriteAttributeString("Project", "$(MSBuildExtensionsPath)\\Novell\\Novell.MonoDroid.CSharp.targets");
@@ -1593,7 +1431,6 @@ public static class gen
 	{
 		switch (env)
 		{
-			case "ios_classic":
 			case "ios_unified":
 			case "macos":
 			case "watchos":
@@ -1615,9 +1452,6 @@ public static class gen
 				break;
 			case "macos":
 				write_reference(f, "Xamarin.Mac");
-				break;
-			case "ios_classic":
-				write_reference(f, "monotouch");
 				break;
 			case "android":
 				write_reference(f, "Mono.Android");
@@ -1669,9 +1503,6 @@ public static class gen
 		{
 			case "profile136":
 				defines.Add("OLD_REFLECTION");
-				break;
-			case "ios_classic":
-				defines.Add("PLATFORM_IOS");
 				break;
 			case "macos":
 				f.WriteElementString("TargetFrameworkIdentifier", "Xamarin.Mac");
@@ -1798,9 +1629,6 @@ public static class gen
 		{
 			switch (env)
 			{
-				case "ios_classic":
-					write_project_type_guids(f, GUID_IOS, GUID_CSHARP);
-					break;
 				case "ios_unified":
 					write_project_type_guids(f, GUID_UNIFIED_IOS, GUID_CSHARP);
 					break;
@@ -1837,211 +1665,7 @@ public static class gen
 
 	}
 
-	private static void gen_sqlite3(config_sqlite3 cfg, string root, string top)
-	{
-		XmlWriterSettings settings = new XmlWriterSettings();
-		settings.Indent = true;
-		settings.OmitXmlDeclaration = false;
-
-		string proj = cfg.get_project_path(top);
-		using (XmlWriter f = XmlWriter.Create(proj, settings))
-		{
-			f.WriteStartDocument();
-			f.WriteComment("Automatically generated");
-
-			f.WriteStartElement("Project", "http://schemas.microsoft.com/developer/msbuild/2003");
-			f.WriteAttributeString("ToolsVersion", "4.0");
-			f.WriteAttributeString("DefaultTargets", "Build");
-
-			f.WriteStartElement("ItemGroup");
-			f.WriteAttributeString("Label", "ProjectConfigurations");
-
-			f.WriteStartElement("ProjectConfiguration");
-			f.WriteAttributeString("Include", string.Format("Debug|{0}", cfg.fixed_cpu()));
-			f.WriteElementString("Configuration", "Debug");
-			f.WriteElementString("Platform", cfg.fixed_cpu());
-			f.WriteEndElement(); // ProjectConfiguration
-
-			f.WriteStartElement("ProjectConfiguration");
-			f.WriteAttributeString("Include", string.Format("Release|{0}", cfg.fixed_cpu()));
-			f.WriteElementString("Configuration", "Release");
-			f.WriteElementString("Platform", cfg.fixed_cpu());
-			f.WriteEndElement(); // ProjectConfiguration
-
-			f.WriteEndElement(); // ItemGroup
-
-			f.WriteStartElement("PropertyGroup");
-			f.WriteElementString("ProjectGuid", cfg.guid);
-			f.WriteElementString("Keyword", "Win32Proj");
-			f.WriteElementString("DefaultLanguage", "en-us");
-
-			switch (cfg.toolset)
-			{
-				case "v110_xp":
-					break;
-				case "v110":
-					f.WriteElementString("MinimumVisualStudioVersion", "11.0");
-					f.WriteElementString("WindowsAppContainer", "true");
-					f.WriteElementString("AppContainerApplication", "true");
-					break;
-				case "v120":
-					f.WriteElementString("MinimumVisualStudioVersion", "12.0");
-					f.WriteElementString("WindowsAppContainer", "true");
-					f.WriteElementString("AppContainerApplication", "true");
-					break;
-				case "v140":
-					f.WriteElementString("MinimumVisualStudioVersion", "14.0");
-					f.WriteElementString("ApplicationType", "Windows Store");
-					f.WriteElementString("AppContainerApplication", "true");
-					f.WriteElementString("ApplicationTypeRevision", "10.0");
-					f.WriteElementString("WindowsTargetPlatformMinVersion", "10.0.10240.0");
-					f.WriteElementString("WindowsTargetPlatformVersion", "10.0.10586.0");
-					break;
-				case "v110_wp80":
-					f.WriteElementString("MinimumVisualStudioVersion", "11.0");
-					break;
-				case "v120_wp81":
-					f.WriteElementString("MinimumVisualStudioVersion", "12.0");
-					f.WriteElementString("AppContainerApplication", "true");
-					f.WriteElementString("ApplicationType", "Windows Phone");
-					f.WriteElementString("ApplicationTypeRevision", "8.1");
-					break;
-				default:
-					throw new Exception("unknown toolset");
-			}
-
-			f.WriteEndElement(); // PropertyGroup
-
-			f.WriteStartElement("Import");
-			f.WriteAttributeString("Project", "$(VCTargetsPath)\\Microsoft.Cpp.Default.props");
-			f.WriteEndElement(); // Import
-
-			f.WriteStartElement("PropertyGroup");
-			f.WriteElementString("ConfigurationType", "DynamicLibrary");
-			f.WriteElementString("TargetName", "e_sqlite3");
-
-			f.WriteElementString("PlatformToolset", cfg.toolset);
-
-			f.WriteEndElement(); // PropertyGroup
-
-			switch (cfg.toolset)
-			{
-				case "v110_xp":
-					break;
-				case "v110":
-				case "v120":
-				case "v110_wp80":
-				case "v120_wp81":
-				case "v140":
-					f.WriteStartElement("ItemDefinitionGroup");
-					f.WriteStartElement("ClCompile");
-					write_cpp_define(f, "SQLITE_OS_WINRT");
-					f.WriteEndElement(); // ClCompile
-					f.WriteEndElement(); // ItemDefinitionGroup
-					break;
-				default:
-					throw new Exception("unknown toolset");
-			}
-
-			f.WriteStartElement("ItemDefinitionGroup");
-			f.WriteStartElement("ClCompile");
-			write_cpp_define(f, "SQLITE_WIN32_FILEMAPPING_API=1");
-			f.WriteEndElement(); // ClCompile
-			f.WriteEndElement(); // ItemDefinitionGroup
-
-			f.WriteStartElement("PropertyGroup");
-			f.WriteAttributeString("Condition", string.Format(" '$(Configuration)' == 'Debug' "));
-			f.WriteElementString("UseDebugLibraries", "true");
-			f.WriteEndElement(); // PropertyGroup
-
-			f.WriteStartElement("PropertyGroup");
-			f.WriteAttributeString("Condition", string.Format(" '$(Configuration)' == 'Release' "));
-			f.WriteElementString("UseDebugLibraries", "false");
-			f.WriteEndElement(); // PropertyGroup
-
-			f.WriteStartElement("Import");
-			f.WriteAttributeString("Project", "$(VCTargetsPath)\\Microsoft.Cpp.props");
-			f.WriteEndElement(); // Import
-
-			f.WriteStartElement("PropertyGroup");
-			f.WriteElementString("OutDir", string.Format("bin\\$(Configuration)\\"));
-			f.WriteElementString("IntDir", string.Format("obj\\$(Configuration)\\"));
-			f.WriteEndElement(); // PropertyGroup
-
-			f.WriteStartElement("ItemDefinitionGroup");
-			f.WriteStartElement("ClCompile");
-			write_cpp_define(f, "_USRDLL");
-			write_cpp_define(f, "SQLITE_API=__declspec(dllexport)");
-			//write_cpp_define(f, "SQLITE_OMIT_LOAD_EXTENSION");
-			// TODO write_cpp_define(f, "SQLITE_THREADSAFE=whatever");
-			//write_cpp_define(f, "SQLITE_TEMP_STORE=whatever");
-			write_cpp_define(f, "SQLITE_DEFAULT_FOREIGN_KEYS=1");
-			write_cpp_define(f, "SQLITE_ENABLE_RTREE");
-			write_cpp_define(f, "SQLITE_ENABLE_JSON1");
-			// TODO FTS5?
-			write_cpp_define(f, "SQLITE_ENABLE_FTS4");
-			write_cpp_define(f, "SQLITE_ENABLE_FTS3_PARENTHESIS");
-			write_cpp_define(f, "SQLITE_ENABLE_COLUMN_METADATA");
-			f.WriteElementString("PrecompiledHeader", "NotUsing");
-			f.WriteElementString("CompileAsWinRT", "false");
-			f.WriteElementString("SDLCheck", "false");
-			f.WriteEndElement(); // ClCompile
-			f.WriteStartElement("Link");
-			f.WriteElementString("SubSystem", "Console");
-			f.WriteElementString("IgnoreAllDefaultLibraries", "false");
-			f.WriteElementString("GenerateWindowsMetadata", "false");
-			f.WriteEndElement(); // Link
-			f.WriteEndElement(); // ItemDefinitionGroup
-
-			f.WriteStartElement("ItemDefinitionGroup");
-			f.WriteAttributeString("Condition", string.Format("'$(Configuration)'=='{0}' ", "Debug"));
-			f.WriteStartElement("ClCompile");
-			f.WriteElementString("Optimization", "Disabled");
-			write_cpp_define(f, "_DEBUG");
-			f.WriteEndElement(); // ClCompile
-			f.WriteStartElement("Link");
-			f.WriteElementString("GenerateDebugInformation", "true");
-			f.WriteEndElement(); // Link
-			f.WriteEndElement(); // ItemDefinitionGroup
-
-			f.WriteStartElement("ItemDefinitionGroup");
-			f.WriteStartElement("ClCompile");
-			f.WriteAttributeString("Condition", string.Format("'$(Configuration)'=='{0}' ", "Release"));
-			f.WriteElementString("Optimization", "MaxSpeed");
-			f.WriteElementString("FunctionLevelLinking", "true");
-			f.WriteElementString("IntrinsicFunctions", "true");
-			if (cfg.toolset == "v110_xp") {
-				f.WriteElementString("RuntimeLibrary", "MultiThreaded");
-			}
-			write_cpp_define(f, "NDEBUG");
-			f.WriteEndElement(); // ClCompile
-			f.WriteStartElement("Link");
-			f.WriteElementString("GenerateDebugInformation", "false");
-			f.WriteElementString("EnableCOMDATFolding", "true");
-			f.WriteElementString("OptimizeReferences", "true");
-			f.WriteEndElement(); // Link
-			f.WriteEndElement(); // ItemDefinitionGroup
-
-			f.WriteStartElement("ItemGroup");
-			{
-				string path = Path.Combine(root, "sqlite3\\sqlite3.c");
-				f.WriteStartElement("ClCompile");
-				f.WriteAttributeString("Include", path);
-				f.WriteEndElement(); // ClCompile
-			}
-			f.WriteEndElement(); // ItemGroup
-
-			f.WriteStartElement("Import");
-			f.WriteAttributeString("Project", "$(VCTargetsPath)\\Microsoft.Cpp.targets");
-			f.WriteEndElement(); // Import
-
-			f.WriteEndElement(); // Project
-
-			f.WriteEndDocument();
-		}
-	}
-
-	private static void gen_cppinterop(config_cppinterop cfg, string root, string top)
+	private static void gen_cppinterop(config_cppinterop cfg, string root, string top, string cb_bin)
 	{
 		XmlWriterSettings settings = new XmlWriterSettings();
 		settings.Indent = true;
@@ -2170,7 +1794,7 @@ public static class gen
 			f.WriteElementString("TargetName", "SQLitePCL.cppinterop");
 			f.WriteElementString("OutDir", string.Format("bin\\$(Configuration)\\"));
 			f.WriteElementString("IntDir", string.Format("obj\\$(Configuration)\\"));
-			write_cpp_includepath(f, root, "sqlite3\\");
+			f.WriteElementString("IncludePath", string.Format("{0};$(IncludePath)", Path.Combine(root, "..", "cb", "sqlite3")));
 			f.WriteElementString("LinkIncremental", "false");
 			f.WriteElementString("GenerateManifest", "false");
 			f.WriteEndElement(); // PropertyGroup
@@ -2185,10 +1809,15 @@ public static class gen
 			f.WriteStartElement("Link");
 			f.WriteElementString("SubSystem", "Console");
 			f.WriteElementString("IgnoreAllDefaultLibraries", "false");
-			string sqlite3_item_path = Path.Combine(top, cfg.get_sqlite3_item().get_name(),
-                    "bin",
-                    "release",
-                    "e_sqlite3.lib");
+			string sqlite3_item_path = Path.Combine(
+					cb_bin,
+					"e_sqlite3",
+                    "win",
+					"v110",
+					"wp80",
+					cfg.cpu,
+                    "e_sqlite3.lib"
+					);
 			f.WriteElementString("AdditionalDependencies", string.Format("{0};%(AdditionalDependencies)", sqlite3_item_path));
 			//f.WriteElementString("GenerateWindowsMetadata", "false");
 			f.WriteEndElement(); // Link
@@ -2240,21 +1869,6 @@ public static class gen
 				case "wp81_sl":
 					break;
 			}
-
-#if not
-			// TODO if this supported other ways of getting sqlite, like
-			// _dynamic_sqlite3 or _static_sqlcipher, the following would be different
-
-			f.WriteStartElement("ItemGroup");
-			f.WriteStartElement("ProjectReference");
-			{
-				config_sqlite3 other = cfg.get_sqlite3_item();
-				f.WriteAttributeString("Include", other.get_project_filename());
-				f.WriteElementString("Project", other.guid);
-			}
-			f.WriteEndElement(); // ProjectReference
-			f.WriteEndElement(); // ItemGroup
-#endif
 
 			f.WriteStartElement("Import");
 			f.WriteAttributeString("Project", "$(VCTargetsPath)\\Microsoft.Cpp.targets");
@@ -2316,95 +1930,95 @@ public static class gen
         fix_version(project_dot_json);
     }
 
-    private static void write_android_native_libs(string root, XmlWriter f, string which)
+    private static void write_android_native_libs(string cb_bin, XmlWriter f)
     {
         f.WriteStartElement("EmbeddedNativeLibrary");
-        f.WriteAttributeString("Include", Path.Combine(root, string.Format("android\\{0}\\libs\\x86\\libe_sqlite3.so", which)));
+        f.WriteAttributeString("Include", Path.Combine(cb_bin, "e_sqlite3", "android", "x86", "libe_sqlite3.so"));
         f.WriteElementString("CopyToOutputDirectory", "Always");
-        f.WriteElementString("Link", string.Format("x86\\libe_sqlite3.so", which));
+        f.WriteElementString("Link", "x86\\libe_sqlite3.so");
         f.WriteEndElement(); // EmbeddedNativeLibrary
 
         f.WriteStartElement("EmbeddedNativeLibrary");
-        f.WriteAttributeString("Include", Path.Combine(root, string.Format("android\\{0}\\libs\\x86_64\\libe_sqlite3.so", which)));
+        f.WriteAttributeString("Include", Path.Combine(cb_bin,  "e_sqlite3", "android", "x86_64", "libe_sqlite3.so"));
         f.WriteElementString("CopyToOutputDirectory", "Always");
-        f.WriteElementString("Link", string.Format("x86_64\\libe_sqlite3.so", which));
+        f.WriteElementString("Link", "x86_64\\libe_sqlite3.so");
         f.WriteEndElement(); // EmbeddedNativeLibrary
 
         f.WriteStartElement("EmbeddedNativeLibrary");
-        f.WriteAttributeString("Include", Path.Combine(root, string.Format("android\\{0}\\libs\\armeabi\\libe_sqlite3.so", which)));
+        f.WriteAttributeString("Include", Path.Combine(cb_bin,  "e_sqlite3", "android", "armeabi", "libe_sqlite3.so"));
         f.WriteElementString("CopyToOutputDirectory", "Always");
-        f.WriteElementString("Link", string.Format("armeabi\\libe_sqlite3.so", which));
+        f.WriteElementString("Link", "armeabi\\libe_sqlite3.so");
         f.WriteEndElement(); // EmbeddedNativeLibrary
 
         f.WriteStartElement("EmbeddedNativeLibrary");
-        f.WriteAttributeString("Include", Path.Combine(root, string.Format("android\\{0}\\libs\\arm64-v8a\\libe_sqlite3.so", which)));
+        f.WriteAttributeString("Include", Path.Combine(cb_bin,  "e_sqlite3", "android", "arm64-v8a", "libe_sqlite3.so"));
         f.WriteElementString("CopyToOutputDirectory", "Always");
-        f.WriteElementString("Link", string.Format("arm64-v8a\\libe_sqlite3.so", which));
+        f.WriteElementString("Link", "arm64-v8a\\libe_sqlite3.so");
         f.WriteEndElement(); // EmbeddedNativeLibrary
 
         f.WriteStartElement("EmbeddedNativeLibrary");
-        f.WriteAttributeString("Include", Path.Combine(root, string.Format("android\\{0}\\libs\\armeabi-v7a\\libe_sqlite3.so", which)));
+        f.WriteAttributeString("Include", Path.Combine(cb_bin,  "e_sqlite3", "android", "armeabi-v7a", "libe_sqlite3.so"));
         f.WriteElementString("CopyToOutputDirectory", "Always");
-        f.WriteElementString("Link", string.Format("armeabi-v7a\\libe_sqlite3.so", which));
+        f.WriteElementString("Link", "armeabi-v7a\\libe_sqlite3.so");
         f.WriteEndElement(); // EmbeddedNativeLibrary
 
 #if not
         f.WriteStartElement("EmbeddedNativeLibrary");
-        f.WriteAttributeString("Include", Path.Combine(root, string.Format("android\\{0}\\libs\\mips\\libe_sqlite3.so", which)));
+        f.WriteAttributeString("Include", Path.Combine(cb_bin,  "e_sqlite3", "android", "mips", "libe_sqlite3.so"));
         f.WriteElementString("CopyToOutputDirectory", "Always");
-        f.WriteElementString("Link", string.Format("mips\\libe_sqlite3.so", which));
+        f.WriteElementString("Link", "mips\\libe_sqlite3.so");
         f.WriteEndElement(); // EmbeddedNativeLibrary
 
         f.WriteStartElement("EmbeddedNativeLibrary");
-        f.WriteAttributeString("Include", Path.Combine(root, string.Format("android\\{0}\\libs\\mips64\\libe_sqlite3.so", which)));
+        f.WriteAttributeString("Include", Path.Combine(cb_bin,  "e_sqlite3", "android", "mips64", "libe_sqlite3.so"));
         f.WriteElementString("CopyToOutputDirectory", "Always");
-        f.WriteElementString("Link", string.Format("mips64\\libe_sqlite3.so", which));
+        f.WriteElementString("Link", "mips64\\libe_sqlite3.so");
         f.WriteEndElement(); // EmbeddedNativeLibrary
 #endif
 
     }
 
-    private static void write_android_native_libs_sqlcipher(string root, XmlWriter f)
+    private static void write_android_native_libs_sqlcipher(string cb_bin, XmlWriter f)
     {
         f.WriteStartElement("EmbeddedNativeLibrary");
-        f.WriteAttributeString("Include", Path.Combine(root, string.Format("couchbase-lite-libsqlcipher\\libs\\android\\x86\\libsqlcipher.so")));
+        f.WriteAttributeString("Include", Path.Combine(cb_bin, "sqlcipher", "android", "x86", "libsqlcipher.so"));
         f.WriteElementString("CopyToOutputDirectory", "Always");
         f.WriteElementString("Link", string.Format("x86\\libsqlcipher.so"));
         f.WriteEndElement(); // EmbeddedNativeLibrary
 
         f.WriteStartElement("EmbeddedNativeLibrary");
-        f.WriteAttributeString("Include", Path.Combine(root, string.Format("couchbase-lite-libsqlcipher\\libs\\android\\x86_64\\libsqlcipher.so")));
+        f.WriteAttributeString("Include", Path.Combine(cb_bin, "sqlcipher", "android", "x86_64", "libsqlcipher.so"));
         f.WriteElementString("CopyToOutputDirectory", "Always");
         f.WriteElementString("Link", string.Format("x86_64\\libsqlcipher.so"));
         f.WriteEndElement(); // EmbeddedNativeLibrary
 
         f.WriteStartElement("EmbeddedNativeLibrary");
-        f.WriteAttributeString("Include", Path.Combine(root, string.Format("couchbase-lite-libsqlcipher\\libs\\android\\armeabi\\libsqlcipher.so")));
+        f.WriteAttributeString("Include", Path.Combine(cb_bin, "sqlcipher", "android", "armeabi", "libsqlcipher.so"));
         f.WriteElementString("CopyToOutputDirectory", "Always");
         f.WriteElementString("Link", string.Format("armeabi\\libsqlcipher.so"));
         f.WriteEndElement(); // EmbeddedNativeLibrary
 
         f.WriteStartElement("EmbeddedNativeLibrary");
-        f.WriteAttributeString("Include", Path.Combine(root, string.Format("couchbase-lite-libsqlcipher\\libs\\android\\arm64-v8a\\libsqlcipher.so")));
+        f.WriteAttributeString("Include", Path.Combine(cb_bin, "sqlcipher", "android", "arm64-v8a", "libsqlcipher.so"));
         f.WriteElementString("CopyToOutputDirectory", "Always");
         f.WriteElementString("Link", string.Format("arm64-v8a\\libsqlcipher.so"));
         f.WriteEndElement(); // EmbeddedNativeLibrary
 
         f.WriteStartElement("EmbeddedNativeLibrary");
-        f.WriteAttributeString("Include", Path.Combine(root, string.Format("couchbase-lite-libsqlcipher\\libs\\android\\armeabi-v7a\\libsqlcipher.so")));
+        f.WriteAttributeString("Include", Path.Combine(cb_bin, "sqlcipher", "android", "armeabi-v7a", "libsqlcipher.so"));
         f.WriteElementString("CopyToOutputDirectory", "Always");
         f.WriteElementString("Link", string.Format("armeabi-v7a\\libsqlcipher.so"));
         f.WriteEndElement(); // EmbeddedNativeLibrary
 
 #if not
         f.WriteStartElement("EmbeddedNativeLibrary");
-        f.WriteAttributeString("Include", Path.Combine(root, string.Format("couchbase-lite-libsqlcipher\\libs\\android\\mips\\libsqlcipher.so")));
+        f.WriteAttributeString("Include", Path.Combine(cb_bin, "sqlcipher", "android", "mips", "libsqlcipher.so"));
         f.WriteElementString("CopyToOutputDirectory", "Always");
         f.WriteElementString("Link", string.Format("mips\\libsqlcipher.so"));
         f.WriteEndElement(); // EmbeddedNativeLibrary
 
         f.WriteStartElement("EmbeddedNativeLibrary");
-        f.WriteAttributeString("Include", Path.Combine(root, string.Format("couchbase-lite-libsqlcipher\\libs\\android\\mips64\\libsqlcipher.so")));
+        f.WriteAttributeString("Include", Path.Combine(cb_bin, "sqlcipher", "android", "mips64", "libsqlcipher.so"));
         f.WriteElementString("CopyToOutputDirectory", "Always");
         f.WriteElementString("Link", string.Format("mips64\\libsqlcipher.so"));
         f.WriteEndElement(); // EmbeddedNativeLibrary
@@ -2417,12 +2031,15 @@ public static class gen
 		string cs = File.ReadAllText(Path.Combine(root, "src/cs/AssemblyInfo.cs"));
 		using (TextWriter tw = new StreamWriter(Path.Combine(top, string.Format("AssemblyInfo.{0}.cs", cfg.assemblyname))))
 		{
-			string cs1 = cs.Replace("REPLACE_WITH_ASSEMBLY_NAME", '"' + cfg.assemblyname + '"');
+			string cs1 = cs
+				.Replace("REPLACE_WITH_ASSEMBLY_NAME", '"' + cfg.assemblyname + '"')
+				.Replace("REPLACE_WITH_ASSEMBLY_VERSION", '"' + ASSEMBLY_VERSION + '"')
+				;
 			tw.Write(cs1);
 		}
 	}
 
-	private static void gen_csproj(config_csproj cfg, string root, string top)
+	private static void gen_csproj(config_csproj cfg, string root, string top, string cb_bin)
 	{
 		XmlWriterSettings settings = new XmlWriterSettings();
 		settings.Indent = true;
@@ -2588,7 +2205,7 @@ public static class gen
                             // TODO warning says this is deprecated
                             f.WriteStartElement("ManifestResourceWithNoCulture");
                             // TODO underscore
-                            f.WriteAttributeString("Include", Path.Combine(root, "apple\\libs\\ios\\sqlite3\\e_sqlite3.a"));
+                            f.WriteAttributeString("Include", Path.Combine(cb_bin, "e_sqlite3", "ios", "e_sqlite3.a"));
                             f.WriteElementString("Link", "e_sqlite3.a");
                             f.WriteEndElement(); // ManifestResourceWithNoCulture
                             f.WriteEndElement(); // ItemGroup
@@ -2599,8 +2216,8 @@ public static class gen
 
                             // TODO warning says this is deprecated
                             f.WriteStartElement("ManifestResourceWithNoCulture");
-                            f.WriteAttributeString("Include", Path.Combine(root, "couchbase-lite-libsqlcipher\\libs\\ios\\libsqlcipher.a"));
-                            f.WriteElementString("Link", "libsqlcipher.a");
+                            f.WriteAttributeString("Include", Path.Combine(cb_bin, "sqlcipher", "ios", "sqlcipher.a"));
+                            f.WriteElementString("Link", "sqlcipher.a");
                             f.WriteEndElement(); // ManifestResourceWithNoCulture
 
                             f.WriteEndElement(); // ItemGroup
@@ -2618,7 +2235,7 @@ public static class gen
                             // TODO warning says this is deprecated
                             f.WriteStartElement("ManifestResourceWithNoCulture");
                             // TODO underscore
-                            f.WriteAttributeString("Include", Path.Combine(root, "apple\\libs\\watchos\\sqlite3\\e_sqlite3.a"));
+                            f.WriteAttributeString("Include", Path.Combine(cb_bin, "e_sqlite3", "watchos", "e_sqlite3.a"));
                             f.WriteElementString("Link", "e_sqlite3.a");
                             f.WriteEndElement(); // ManifestResourceWithNoCulture
                             f.WriteEndElement(); // ItemGroup
@@ -2629,8 +2246,8 @@ public static class gen
 
                             // TODO warning says this is deprecated
                             f.WriteStartElement("ManifestResourceWithNoCulture");
-                            f.WriteAttributeString("Include", Path.Combine(root, "couchbase-lite-libsqlcipher\\libs\\watchos\\libsqlcipher.a"));
-                            f.WriteElementString("Link", "libsqlcipher.a");
+                            f.WriteAttributeString("Include", Path.Combine(cb_bin, "sqlcipher", "watchos", "sqlcipher.a"));
+                            f.WriteElementString("Link", "sqlcipher.a");
                             f.WriteEndElement(); // ManifestResourceWithNoCulture
 
                             f.WriteEndElement(); // ItemGroup
@@ -2641,54 +2258,17 @@ public static class gen
             }
                     break;
 
-                    case "ios_classic":
-                        if (cfg.what == "e_sqlite3")
-                        {
-                            f.WriteStartElement("ItemGroup");
-                            // TODO warning says this is deprecated
-                            f.WriteStartElement("ManifestResourceWithNoCulture");
-                            // TODO underscore
-                            f.WriteAttributeString("Include", Path.Combine(root, "apple\\libs\\ios\\sqlite3\\e_sqlite3.a"));
-                            f.WriteElementString("Link", "e_sqlite3.a");
-                            f.WriteEndElement(); // ManifestResourceWithNoCulture
-                            f.WriteEndElement(); // ItemGroup
-                        }
-			else if (cfg.what == "sqlcipher")
-                        {
-                            f.WriteStartElement("ItemGroup");
-
-                            // TODO warning says this is deprecated
-                            f.WriteStartElement("ManifestResourceWithNoCulture");
-                            // TODO underscore
-                            f.WriteAttributeString("Include", Path.Combine(root, "couchbase-lite-libsqlcipher\\libs\\ios\\libsqlcipher.a"));
-                            f.WriteElementString("Link", "libsqlcipher.a");
-                            f.WriteEndElement(); // ManifestResourceWithNoCulture
-
-                            // TODO warning says this is deprecated
-                            f.WriteStartElement("ManifestResourceWithNoCulture");
-                            f.WriteAttributeString("Include", Path.Combine(root, "apple\\libs\\ios\\libcrypto.a"));
-                            f.WriteElementString("Link", "libcrypto.a");
-                            f.WriteEndElement(); // ManifestResourceWithNoCulture
-
-                            f.WriteEndElement(); // ItemGroup
-                        }
-			else
-			{
-				throw new NotImplementedException(string.Format("{0}, {1}", cfg.env, cfg.what));
-			}
-						break;
-
 					case "android":
 						if (cfg.what == "e_sqlite3")
 						{
                             f.WriteStartElement("ItemGroup");
-                            write_android_native_libs(root, f, "sqlite3");
+                            write_android_native_libs(cb_bin, f);
                             f.WriteEndElement(); // ItemGroup
 						}
 						else if (cfg.what == "sqlcipher")
 						{
                             f.WriteStartElement("ItemGroup");
-                            write_android_native_libs_sqlcipher(root, f);
+                            write_android_native_libs_sqlcipher(cb_bin, f);
                             f.WriteEndElement(); // ItemGroup
                         }
 			else
@@ -2750,17 +2330,6 @@ public static class gen
 			f.WriteLine("VisualStudioVersion = 14.0");
 			f.WriteLine("MinimumVisualStudioVersion = 12.0");
 
-			foreach (config_sqlite3 cfg in projects.items_sqlite3)
-			{
-				f.WriteLine("Project(\"{0}\") = \"{1}\", \"{1}\\{2}\", \"{3}\"",
-						GUID_CPP,
-						cfg.get_name(),
-						cfg.get_project_filename(),
-						cfg.guid
-						);
-				f.WriteLine("EndProject");
-			}
-
 			foreach (config_cppinterop cfg in projects.items_cppinterop)
 			{
 				f.WriteLine("Project(\"{0}\") = \"{1}\", \"{1}\\{2}\", \"{3}\"",
@@ -2769,11 +2338,6 @@ public static class gen
 						cfg.get_project_filename(),
 						cfg.guid
 						);
-				f.WriteLine("\tProjectSection(ProjectDependencies) = postProject");
-				config_sqlite3 other = cfg.get_sqlite3_item();
-				f.WriteLine("\t\t{0} = {0}", other.guid);
-				f.WriteLine("\tEndProjectSection");
-
 				f.WriteLine("EndProject");
 			}
 
@@ -2812,13 +2376,6 @@ public static class gen
 			f.WriteLine("\tEndGlobalSection");
 
 			f.WriteLine("\tGlobalSection(ProjectConfigurationPlatforms) = postSolution");
-			foreach (config_sqlite3 cfg in projects.items_sqlite3)
-			{
-				f.WriteLine("\t\t{0}.Debug|Mixed Platforms.ActiveCfg = Debug|{1}", cfg.guid, cfg.fixed_cpu());
-				f.WriteLine("\t\t{0}.Debug|Mixed Platforms.Build.0 = Debug|{1}", cfg.guid, cfg.fixed_cpu());
-				f.WriteLine("\t\t{0}.Release|Mixed Platforms.ActiveCfg = Release|{1}", cfg.guid, cfg.fixed_cpu());
-				f.WriteLine("\t\t{0}.Release|Mixed Platforms.Build.0 = Release|{1}", cfg.guid, cfg.fixed_cpu());
-			}
 			foreach (config_cppinterop cfg in projects.items_cppinterop)
 			{
 				f.WriteLine("\t\t{0}.Debug|Mixed Platforms.ActiveCfg = Debug|{1}", cfg.guid, cfg.fixed_cpu());
@@ -2988,21 +2545,6 @@ public static class gen
 		}
 	}
 
-	private static void write_nuspec_file_entry(config_sqlite3 cfg, XmlWriter f)
-	{
-		f.WriteComment(string.Format("{0}", cfg.get_name()));
-		var a = new List<string>();
-		cfg.get_products(a);
-
-		foreach (string s in a)
-		{
-			f.WriteStartElement("file");
-			f.WriteAttributeString("src", s);
-			f.WriteAttributeString("target", cfg.get_nuget_target_path());
-			f.WriteEndElement(); // file
-		}
-	}
-
 	private static void write_empty(XmlWriter f, string top, string tfm)
     {
 		f.WriteComment("empty directory in lib to avoid nuget adding a reference");
@@ -3035,11 +2577,29 @@ public static class gen
 		f.WriteEndElement(); // file
 	}
 
-	public static string NUSPEC_VERSION = string.Format("1.1.10-pre{0}", DateTime.Now.ToString("yyyyMMddHHmmss")); 
-	//public static string NUSPEC_VERSION = "1.0.0-PLACEHOLDER";
-	//public static string NUSPEC_VERSION = "1.1.9";
+	public const int MAJOR_VERSION = 1;
+	public const int MINOR_VERSION = 1;
+	public const int PATCH_VERSION = 12;
+	public static string NUSPEC_VERSION_PRE = string.Format("{0}.{1}.{2}-pre{3}", 
+		MAJOR_VERSION,
+		MINOR_VERSION,
+		PATCH_VERSION,
+		DateTime.Now.ToString("yyyyMMddHHmmss")
+		); 
+	public static string NUSPEC_VERSION_RELEASE = string.Format("{0}.{1}.{2}",
+		MAJOR_VERSION,
+		MINOR_VERSION,
+		PATCH_VERSION
+		);
+	public static string NUSPEC_VERSION = NUSPEC_VERSION_PRE;
+	public static string ASSEMBLY_VERSION = string.Format("{0}.{1}.{2}.{3}", 
+		MAJOR_VERSION,
+		MINOR_VERSION,
+		PATCH_VERSION,
+		(int) ((DateTime.Now - new DateTime(2018,1,1)).TotalDays) 
+		); 
 
-	private const string NUSPEC_RELEASE_NOTES = "1.1.10:  TODO.  1.1.9:  bug fixes for Xamarin.Mac.  add a sqlcipher build for UWP.  1.1.8:  SQLite builds for .NET Core ARM, linux and Windows IoT.  Finalizers.  Fix Xam.Mac issue with bundle_green.  Fix edge case in one of the sqlite3_column_blob() overloads.  New 'bundle_zetetic' for use with official SQLCipher builds from Zetetic.  1.1.7:  Drop SQLite down to 3.18.2.  1.1.6:  AssetTargetFallback fixes.  update sqlite builds to 3.19.3.  1.1.5:  bug fix path in lib.foo.linux targets file.  1.1.4:  tweak use of nuget .targets files for compat with .NET Core.  1.1.3:  add SQLITE_CHECKPOINT_TRUNCATE symbol definition.  add new blob overloads to enable better performance in certain cases.  chg winsqlite3 to use StdCall.  fix targets files for better compat with VS 2017 nuget pack.  add 32-bit linux build for e_sqlite3.  update to latest libcrypto builds from couchbase folks.  1.1.2:  ability to FreezeProvider().  update e_sqlite3 builds to 3.16.1.  1.1.1:  add support for config_log.  update e_sqlite3 builds to 3.15.2.  fix possible memory corruption when using prepare_v2() with multiple statements.  better errmsg from ugly.step().  add win8 dep groups in bundles.  fix batteries_v2.Init() to be 'last call wins' like the v1 version is.  chg raw.SetProvider() to avoid calling sqlite3_initialize() so that sqlite3_config() can be used.  better support for Xamarin.Mac.  1.1.0:  fix problem with winsqlite3 on UWP.  remove iOS Classic support.  add sqlite3_enable_load_extension.  add sqlite3_config/initialize/shutdown.  add Batteries_V2.Init().  1.0.1:  fix problem with bundle_e_sqlite3 on iOS.  fix issues with .NET Core.  add bundle_sqlcipher.  1.0.0 release:  Contains minor breaking changes since 0.9.x.  All package names now begin with SQLitePCLRaw.  Now supports netstandard.  Fixes for UWP and Android N.  Change all unit tests to xunit.  Support for winsqlite3.dll and custom SQLite builds.";
+	private const string NUSPEC_RELEASE_NOTES = "1.1.12:  update e_sqlite3 builds to 3.25.2.  1.1.11:  put a copy of alpine-x64/e_sqlite3 into linux-musl-x64, for .NET Core 2.1.  1.1.10:  improve bundle_zetetic.  update e_sqlite3 to 3.22.0 and turn on FTS5.  fix bundled sqlcipher build for UWP.  AssemblyVersion now being updated properly.  attempt fix crash involving CLR finalizer.  add e_sqlite3 builds for linux-arm64 and alpine-x64.  change generic Windows builds to use win-foo instead of win7-foo.  add support for SQLITE_DETERMINISTIC.  added sqlite3_blob_open overload to support higher perf in certain cases.  fix problem with Mac-but-not-Xamarin and targets file.   1.1.9:  bug fixes for Xamarin.Mac.  add a sqlcipher build for UWP.  1.1.8:  SQLite builds for .NET Core ARM, linux and Windows IoT.  Finalizers.  Fix Xam.Mac issue with bundle_green.  Fix edge case in one of the sqlite3_column_blob() overloads.  New 'bundle_zetetic' for use with official SQLCipher builds from Zetetic.  1.1.7:  Drop SQLite down to 3.18.2.  1.1.6:  AssetTargetFallback fixes.  update sqlite builds to 3.19.3.  1.1.5:  bug fix path in lib.foo.linux targets file.  1.1.4:  tweak use of nuget .targets files for compat with .NET Core.  1.1.3:  add SQLITE_CHECKPOINT_TRUNCATE symbol definition.  add new blob overloads to enable better performance in certain cases.  chg winsqlite3 to use StdCall.  fix targets files for better compat with VS 2017 nuget pack.  add 32-bit linux build for e_sqlite3.  update to latest libcrypto builds from couchbase folks.  1.1.2:  ability to FreezeProvider().  update e_sqlite3 builds to 3.16.1.  1.1.1:  add support for config_log.  update e_sqlite3 builds to 3.15.2.  fix possible memory corruption when using prepare_v2() with multiple statements.  better errmsg from ugly.step().  add win8 dep groups in bundles.  fix batteries_v2.Init() to be 'last call wins' like the v1 version is.  chg raw.SetProvider() to avoid calling sqlite3_initialize() so that sqlite3_config() can be used.  better support for Xamarin.Mac.  1.1.0:  fix problem with winsqlite3 on UWP.  remove iOS Classic support.  add sqlite3_enable_load_extension.  add sqlite3_config/initialize/shutdown.  add Batteries_V2.Init().  1.0.1:  fix problem with bundle_e_sqlite3 on iOS.  fix issues with .NET Core.  add bundle_sqlcipher.  1.0.0 release:  Contains minor breaking changes since 0.9.x.  All package names now begin with SQLitePCLRaw.  Now supports netstandard.  Fixes for UWP and Android N.  Change all unit tests to xunit.  Support for winsqlite3.dll and custom SQLite builds.";
 
     private static void add_dep_core(XmlWriter f)
     {
@@ -3096,7 +2656,7 @@ public static class gen
 			f.WriteElementString("description", "SQLitePCL.raw is a Portable Class Library (PCL) for low-level (raw) access to SQLite.  This package does not provide an API which is friendly to app developers.  Rather, it provides an API which handles platform and configuration issues, upon which a friendlier API can be built.  In order to use this package, you will need to also add one of the SQLitePCLRaw.provider.* packages and call raw.SetProvider().  Convenience packages are named SQLitePCLRaw.bundle_*.");
 			f.WriteElementString("authors", "Eric Sink, et al");
 			f.WriteElementString("owners", "Eric Sink");
-			f.WriteElementString("copyright", "Copyright 2014-2017 Zumero, LLC");
+			f.WriteElementString("copyright", "Copyright 2014-2018 Zumero, LLC");
 			f.WriteElementString("requireLicenseAcceptance", "false");
 			f.WriteElementString("licenseUrl", "https://raw.github.com/ericsink/SQLitePCL.raw/master/LICENSE.TXT");
 			f.WriteElementString("projectUrl", "https://github.com/ericsink/SQLitePCL.raw");
@@ -3148,7 +2708,7 @@ public static class gen
 		}
 	}
 
-	private static void gen_nuspec_esqlite3(string top, string root, config_esqlite3 cfg)
+	private static void gen_nuspec_esqlite3(string top, string cb_bin, config_esqlite3 cfg)
 	{
 		XmlWriterSettings settings = new XmlWriterSettings();
 		settings.Indent = true;
@@ -3171,7 +2731,7 @@ public static class gen
 			f.WriteElementString("description", "This package contains a platform-specific native code build of SQLite for use with SQLitePCL.raw.  To use this, you need SQLitePCLRaw.core as well as SQLitePCLRaw.provider.e_sqlite3.net45 or similar.  Convenience packages are named SQLitePCLRaw.bundle_*.");
 			f.WriteElementString("authors", "Eric Sink, D. Richard Hipp, et al");
 			f.WriteElementString("owners", "Eric Sink");
-			f.WriteElementString("copyright", "Copyright 2014-2017 Zumero, LLC");
+			f.WriteElementString("copyright", "Copyright 2014-2018 Zumero, LLC");
 			f.WriteElementString("requireLicenseAcceptance", "false");
 			f.WriteElementString("licenseUrl", "https://raw.github.com/ericsink/SQLitePCL.raw/master/LICENSE.TXT");
 			f.WriteElementString("projectUrl", "https://github.com/ericsink/SQLitePCL.raw");
@@ -3183,20 +2743,48 @@ public static class gen
 
 			f.WriteStartElement("files");
 
-			foreach (config_sqlite3 other in cfg.get_sqlite3_items()) 
+			Action<string,string,string,string> write_file_entry = (toolset, flavor, arch, rid) =>
 			{
-				write_nuspec_file_entry(
-						other, 
-						f
-						);
+				f.WriteStartElement("file");
+				f.WriteAttributeString("src", Path.Combine(cb_bin, "e_sqlite3", "win", toolset, flavor, arch, "e_sqlite3.dll"));
+				f.WriteAttributeString("target", string.Format("runtimes\\{0}\\native\\", rid));
+				f.WriteEndElement(); // file
+			};
+
+			switch (cfg.toolset)
+			{
+				case "v110_xp":
+					write_file_entry("v110", "xp", "x86", "win-x86");
+					write_file_entry("v110", "xp", "x64", "win-x64");
+					write_file_entry("v140", "plain", "arm", "win8-arm");
+					break;
+				case "v110":
+					write_file_entry("v110", "appcontainer", "arm", "win8-arm");
+					write_file_entry("v110", "appcontainer", "x64", "win8-x64");
+					write_file_entry("v110", "appcontainer", "x86", "win8-x86");
+					break;
+				case "v120":
+					write_file_entry("v120", "appcontainer", "arm", "win81-arm");
+					write_file_entry("v120", "appcontainer", "x64", "win81-x64");
+					write_file_entry("v120", "appcontainer", "x86", "win81-x86");
+					break;
+				case "v140":
+					write_file_entry("v140", "appcontainer", "arm", "win10-arm");
+					write_file_entry("v140", "appcontainer", "x64", "win10-x64");
+					write_file_entry("v140", "appcontainer", "x86", "win10-x86");
+					break;
+				case "v110_wp80":
+					write_file_entry("v110", "wp80", "arm", "wp80-arm");
+					write_file_entry("v110", "wp80", "x86", "wp80-x86");
+					break;
+				case "v120_wp81":
+					write_file_entry("v120", "wp81", "arm", "wpa81-arm");
+					write_file_entry("v120", "wp81", "x86", "wpa81-x86");
+					break;
+				default:
+					throw new NotImplementedException(string.Format("esqlite3 nuspec: {0}", cfg.toolset));
 			}
-            if (cfg.toolset == "v110_xp")
-            {
-                f.WriteStartElement("file");
-                f.WriteAttributeString("src", "..\\cb\\bin\\e_sqlite3\\v140\\plain\\arm\\e_sqlite3.dll");
-                f.WriteAttributeString("target", "runtimes\\win8-arm\\native\\");
-                f.WriteEndElement(); // file
-            }
+
 			string tname;
 			switch (cfg.toolset) {
 				case "v110_xp":
@@ -3234,7 +2822,7 @@ public static class gen
 		}
 	}
 
-	private static void gen_nuspec_embedded(string top, string root, config_csproj cfg)
+	private static void gen_nuspec_embedded(string top, config_csproj cfg)
 	{
 		XmlWriterSettings settings = new XmlWriterSettings();
 		settings.Indent = true;
@@ -3257,7 +2845,7 @@ public static class gen
 			f.WriteElementString("description", "This package contains a platform-specific native code build of SQLite for use with SQLitePCL.raw.  To use this, you need SQLitePCLRaw.core as well as SQLitePCLRaw.provider.e_sqlite3.net45 or similar.  Convenience packages are named SQLitePCLRaw.bundle_*.");
 			f.WriteElementString("authors", "Eric Sink, D. Richard Hipp, et al");
 			f.WriteElementString("owners", "Eric Sink");
-			f.WriteElementString("copyright", "Copyright 2014-2017 Zumero, LLC");
+			f.WriteElementString("copyright", "Copyright 2014-2018 Zumero, LLC");
 			f.WriteElementString("requireLicenseAcceptance", "false");
 			f.WriteElementString("licenseUrl", "https://raw.github.com/ericsink/SQLitePCL.raw/master/LICENSE.TXT");
 			f.WriteElementString("projectUrl", "https://github.com/ericsink/SQLitePCL.raw");
@@ -3307,7 +2895,7 @@ public static class gen
 			f.WriteElementString("description", desc);
 			f.WriteElementString("authors", "Eric Sink, et al");
 			f.WriteElementString("owners", "Eric Sink");
-			f.WriteElementString("copyright", "Copyright 2014-2017 Zumero, LLC");
+			f.WriteElementString("copyright", "Copyright 2014-2018 Zumero, LLC");
 			f.WriteElementString("requireLicenseAcceptance", "false");
 			f.WriteElementString("licenseUrl", "https://raw.github.com/ericsink/SQLitePCL.raw/master/LICENSE.TXT");
 			f.WriteElementString("projectUrl", "https://github.com/ericsink/SQLitePCL.raw");
@@ -3362,7 +2950,7 @@ public static class gen
 			f.WriteElementString("description", desc);
 			f.WriteElementString("authors", "Eric Sink, et al");
 			f.WriteElementString("owners", "Eric Sink");
-			f.WriteElementString("copyright", "Copyright 2014-2017 Zumero, LLC");
+			f.WriteElementString("copyright", "Copyright 2014-2018 Zumero, LLC");
 			f.WriteElementString("requireLicenseAcceptance", "false");
 			f.WriteElementString("licenseUrl", "https://raw.github.com/ericsink/SQLitePCL.raw/master/LICENSE.TXT");
 			f.WriteElementString("projectUrl", "https://github.com/ericsink/SQLitePCL.raw");
@@ -3393,7 +2981,7 @@ public static class gen
 		}
 	}
 
-	private static void gen_nuspec_e_sqlite3(string top, string root, string plat)
+	private static void gen_nuspec_e_sqlite3(string top, string cb_bin, string plat)
 	{
 		XmlWriterSettings settings = new XmlWriterSettings();
 		settings.Indent = true;
@@ -3416,7 +3004,7 @@ public static class gen
 			f.WriteElementString("description", "This package contains a platform-specific native code build of SQLite for use with SQLitePCL.raw.  To use this, you need SQLitePCLRaw.core as well as SQLitePCLRaw.provider.e_sqlite3.net45 or similar.  Convenience packages are named SQLitePCLRaw.bundle_*.");
 			f.WriteElementString("authors", "Eric Sink, D. Richard Hipp, et al");
 			f.WriteElementString("owners", "Eric Sink");
-			f.WriteElementString("copyright", "Copyright 2014-2017 Zumero, LLC");
+			f.WriteElementString("copyright", "Copyright 2014-2018 Zumero, LLC");
 			f.WriteElementString("requireLicenseAcceptance", "false");
 			f.WriteElementString("licenseUrl", "https://raw.github.com/ericsink/SQLitePCL.raw/master/LICENSE.TXT");
 			f.WriteElementString("projectUrl", "https://github.com/ericsink/SQLitePCL.raw");
@@ -3433,32 +3021,46 @@ public static class gen
             {
                 case "osx":
                     f.WriteStartElement("file");
-                    f.WriteAttributeString("src", Path.Combine(root, "apple", "libs", "mac", "sqlite3", "libe_sqlite3.dylib"));
+                    f.WriteAttributeString("src", Path.Combine(cb_bin, "e_sqlite3", "mac", "libe_sqlite3.dylib"));
                     f.WriteAttributeString("target", "runtimes\\osx-x64\\native\\libe_sqlite3.dylib");
                     f.WriteEndElement(); // file
-                    gen_nuget_targets_osx(top, tname, "libe_sqlite3.dylib");
+                    gen_nuget_targets_osx(top, tname, "libe_sqlite3.dylib", forxammac: false);
                     break;
                 case "linux":
                     f.WriteStartElement("file");
-                    f.WriteAttributeString("src", Path.Combine(root, "linux", "x64", "libe_sqlite3.so"));
+                    f.WriteAttributeString("src", Path.Combine(cb_bin, "e_sqlite3", "linux", "x64", "libe_sqlite3.so"));
                     f.WriteAttributeString("target", "runtimes\\linux-x64\\native\\libe_sqlite3.so");
                     f.WriteEndElement(); // file
 
                     f.WriteStartElement("file");
-                    f.WriteAttributeString("src", Path.Combine(root, "linux", "x86", "libe_sqlite3.so"));
+                    f.WriteAttributeString("src", Path.Combine(cb_bin, "e_sqlite3", "linux", "x86", "libe_sqlite3.so"));
                     f.WriteAttributeString("target", "runtimes\\linux-x86\\native\\libe_sqlite3.so");
                     f.WriteEndElement(); // file
 
                     f.WriteStartElement("file");
-                    f.WriteAttributeString("src", Path.Combine(root, "linux", "armhf", "libe_sqlite3.so"));
+                    f.WriteAttributeString("src", Path.Combine(cb_bin, "e_sqlite3", "linux", "armhf", "libe_sqlite3.so"));
                     f.WriteAttributeString("target", "runtimes\\linux-arm\\native\\libe_sqlite3.so");
                     f.WriteEndElement(); // file
 
                     f.WriteStartElement("file");
-                    f.WriteAttributeString("src", Path.Combine(root, "linux", "armsf", "libe_sqlite3.so"));
+                    f.WriteAttributeString("src", Path.Combine(cb_bin, "e_sqlite3", "linux", "armsf", "libe_sqlite3.so"));
                     f.WriteAttributeString("target", "runtimes\\linux-armel\\native\\libe_sqlite3.so");
                     f.WriteEndElement(); // file
 
+                    f.WriteStartElement("file");
+                    f.WriteAttributeString("src", Path.Combine(cb_bin, "e_sqlite3", "linux", "musl-x64", "libe_sqlite3.so"));
+                    f.WriteAttributeString("target", "runtimes\\linux-musl-x64\\native\\libe_sqlite3.so");
+                    f.WriteEndElement(); // file
+
+                    f.WriteStartElement("file");
+                    f.WriteAttributeString("src", Path.Combine(cb_bin, "e_sqlite3", "linux", "musl-x64", "libe_sqlite3.so"));
+                    f.WriteAttributeString("target", "runtimes\\alpine-x64\\native\\libe_sqlite3.so");
+                    f.WriteEndElement(); // file
+
+                    f.WriteStartElement("file");
+                    f.WriteAttributeString("src", Path.Combine(cb_bin, "e_sqlite3", "linux", "arm64", "libe_sqlite3.so"));
+                    f.WriteAttributeString("target", "runtimes\\linux-arm64\\native\\libe_sqlite3.so");
+                    f.WriteEndElement(); // file
 
                     gen_nuget_targets_linux(top, tname, "libe_sqlite3.so");
                     break;
@@ -3474,6 +3076,9 @@ public static class gen
             if (plat == "osx")
             {
                 write_empty(f, top, "Xamarin.Mac20");
+                tname = string.Format("{0}.Xamarin.Mac20.targets", id);
+                gen_nuget_targets_osx(top, tname, "libe_sqlite3.dylib", forxammac: true);
+
                 f.WriteStartElement("file");
                 f.WriteAttributeString("src", tname);
                 f.WriteAttributeString("target", string.Format("build\\Xamarin.Mac20\\{0}.targets", id));
@@ -3492,7 +3097,7 @@ public static class gen
 		}
 	}
 
-	private static void gen_nuspec_sqlcipher(string top, string root, string plat)
+	private static void gen_nuspec_sqlcipher(string top, string cb_bin, string plat)
 	{
 		XmlWriterSettings settings = new XmlWriterSettings();
 		settings.Indent = true;
@@ -3515,7 +3120,7 @@ public static class gen
 			f.WriteElementString("description", "This package contains a platform-specific native code build of SQLCipher (see sqlcipher/sqlcipher on GitHub) for use with SQLitePCL.raw.  The build of SQLCipher packaged here is built and maintained by Couchbase (see couchbaselabs/couchbase-lite-libsqlcipher on GitHub).  To use this, you need SQLitePCLRaw.core as well as SQLitePCLRaw.provider.sqlcipher.net45 or similar.  Convenience packages are named SQLitePCLRaw.bundle_*.");
 			f.WriteElementString("authors", "Couchbase, SQLite, Zetetic");
 			f.WriteElementString("owners", "Eric Sink");
-			f.WriteElementString("copyright", "Copyright 2014-2017 Zumero, LLC");
+			f.WriteElementString("copyright", "Copyright 2014-2018 Zumero, LLC");
 			f.WriteElementString("requireLicenseAcceptance", "false");
 			f.WriteElementString("licenseUrl", "https://raw.github.com/ericsink/SQLitePCL.raw/master/LICENSE.TXT");
 			f.WriteElementString("projectUrl", "https://github.com/ericsink/SQLitePCL.raw");
@@ -3531,32 +3136,32 @@ public static class gen
 			switch (plat) {
 				case "windows":
 					f.WriteStartElement("file");
-					f.WriteAttributeString("src", Path.Combine(root, "cb\\bin\\sqlcipher\\v140\\plain\\x86\\sqlcipher.dll"));
-					f.WriteAttributeString("target", string.Format("runtimes\\win7-x86\\native\\sqlcipher.dll"));
+					f.WriteAttributeString("src", Path.Combine(cb_bin, "sqlcipher", "win", "v140", "plain", "x86", "sqlcipher.dll"));
+					f.WriteAttributeString("target", string.Format("runtimes\\win-x86\\native\\sqlcipher.dll"));
 					f.WriteEndElement(); // file
 
 					f.WriteStartElement("file");
-					f.WriteAttributeString("src", Path.Combine(root, "cb\\bin\\sqlcipher\\v140\\plain\\x64\\sqlcipher.dll"));
-					f.WriteAttributeString("target", string.Format("runtimes\\win7-x64\\native\\sqlcipher.dll"));
+					f.WriteAttributeString("src", Path.Combine(cb_bin, "sqlcipher", "win", "v140", "plain", "x64", "sqlcipher.dll"));
+					f.WriteAttributeString("target", string.Format("runtimes\\win-x64\\native\\sqlcipher.dll"));
 					f.WriteEndElement(); // file
 
 					f.WriteStartElement("file");
-					f.WriteAttributeString("src", Path.Combine(root, "cb\\bin\\sqlcipher\\v140\\plain\\arm\\sqlcipher.dll"));
-					f.WriteAttributeString("target", string.Format("runtimes\\win8-arm\\native\\sqlcipher.dll"));
+					f.WriteAttributeString("src", Path.Combine(cb_bin, "sqlcipher", "win", "v140", "plain", "arm", "sqlcipher.dll"));
+					f.WriteAttributeString("target", string.Format("runtimes\\win-arm\\native\\sqlcipher.dll"));
 					f.WriteEndElement(); // file
 
 					f.WriteStartElement("file");
-					f.WriteAttributeString("src", Path.Combine(root, "cb\\bin\\sqlcipher\\v140\\appcontainer\\x64\\sqlcipher.dll"));
+					f.WriteAttributeString("src", Path.Combine(cb_bin, "sqlcipher", "win", "v140", "appcontainer", "x64", "sqlcipher.dll"));
 					f.WriteAttributeString("target", string.Format("runtimes\\win10-x64\\nativeassets\\uap10.0\\sqlcipher.dll"));
 					f.WriteEndElement(); // file
 
 					f.WriteStartElement("file");
-					f.WriteAttributeString("src", Path.Combine(root, "cb\\bin\\sqlcipher\\v140\\appcontainer\\x86\\sqlcipher.dll"));
+					f.WriteAttributeString("src", Path.Combine(cb_bin, "sqlcipher", "win", "v140", "appcontainer", "x86", "sqlcipher.dll"));
 					f.WriteAttributeString("target", string.Format("runtimes\\win10-x86\\nativeassets\\uap10.0\\sqlcipher.dll"));
 					f.WriteEndElement(); // file
 
 					f.WriteStartElement("file");
-					f.WriteAttributeString("src", Path.Combine(root, "cb\\bin\\sqlcipher\\v140\\appcontainer\\arm\\sqlcipher.dll"));
+					f.WriteAttributeString("src", Path.Combine(cb_bin, "sqlcipher", "win", "v140", "appcontainer", "arm", "sqlcipher.dll"));
 					f.WriteAttributeString("target", string.Format("runtimes\\win10-arm\\nativeassets\\uap10.0\\sqlcipher.dll"));
 					f.WriteEndElement(); // file
 
@@ -3564,22 +3169,22 @@ public static class gen
 					break;
 				case "osx":
 					f.WriteStartElement("file");
-					f.WriteAttributeString("src", Path.Combine(root, "couchbase-lite-libsqlcipher\\libs\\osx\\libsqlcipher.dylib"));
+					f.WriteAttributeString("src", Path.Combine(cb_bin, "sqlcipher", "mac", "libsqlcipher.dylib"));
 					f.WriteAttributeString("target", string.Format("runtimes\\osx-x64\\native\\libsqlcipher.dylib"));
 					f.WriteEndElement(); // file
 
-					gen_nuget_targets_osx(top, tname, "libsqlcipher.dylib");
+					gen_nuget_targets_osx(top, tname, "libsqlcipher.dylib", forxammac: false);
 					break;
 				case "linux":
 					// TODO do we need amd64 version here?
 
 					f.WriteStartElement("file");
-					f.WriteAttributeString("src", Path.Combine(root, "couchbase-lite-libsqlcipher\\libs\\linux\\x86_64\\libsqlcipher.so"));
+					f.WriteAttributeString("src", Path.Combine(cb_bin, "sqlcipher", "linux", "x64", "libsqlcipher.so"));
 					f.WriteAttributeString("target", string.Format("runtimes\\linux-x64\\native\\libsqlcipher.so"));
 					f.WriteEndElement(); // file
 
 					f.WriteStartElement("file");
-					f.WriteAttributeString("src", Path.Combine(root, "couchbase-lite-libsqlcipher\\libs\\linux\\x86\\libsqlcipher.so"));
+					f.WriteAttributeString("src", Path.Combine(cb_bin, "sqlcipher", "linux", "x86", "libsqlcipher.so"));
 					f.WriteAttributeString("target", string.Format("runtimes\\linux-x86\\native\\libsqlcipher.so"));
 					f.WriteEndElement(); // file
 
@@ -3596,6 +3201,9 @@ public static class gen
             if (plat == "osx")
             {
                 write_empty(f, top, "Xamarin.Mac20");
+                tname = string.Format("{0}.Xamarin.Mac20.targets", id);
+                gen_nuget_targets_osx(top, tname, "libsqlcipher.dylib", forxammac: true);
+
                 f.WriteStartElement("file");
                 f.WriteAttributeString("src", tname);
                 f.WriteAttributeString("target", string.Format("build\\Xamarin.Mac20\\{0}.targets", id));
@@ -3639,7 +3247,7 @@ public static class gen
 			f.WriteElementString("description", "tests");
 			f.WriteElementString("authors", "Eric Sink");
 			f.WriteElementString("owners", "Eric Sink");
-			f.WriteElementString("copyright", "Copyright 2014-2017 Zumero, LLC");
+			f.WriteElementString("copyright", "Copyright 2014-2018 Zumero, LLC");
 			f.WriteElementString("requireLicenseAcceptance", "false");
 			f.WriteElementString("licenseUrl", "https://raw.github.com/ericsink/SQLitePCL.raw/master/LICENSE.TXT");
 			f.WriteElementString("projectUrl", "https://github.com/ericsink/SQLitePCL.raw");
@@ -3715,7 +3323,7 @@ public static class gen
 			f.WriteElementString("description", "These extension methods for SQLitePCL.raw provide a more usable API while remaining stylistically similar to the sqlite3 C API, which most C# developers would consider 'ugly'.  This package exists for people who (1) really like the sqlite3 C API, and (2) really like C#.  So far, evidence suggests that 100% of the people matching both criteria are named Eric Sink, but this package is available just in case he is not the only one of his kind.");
 			f.WriteElementString("authors", "Eric Sink");
 			f.WriteElementString("owners", "Eric Sink");
-			f.WriteElementString("copyright", "Copyright 2014-2017 Zumero, LLC");
+			f.WriteElementString("copyright", "Copyright 2014-2018 Zumero, LLC");
 			f.WriteElementString("requireLicenseAcceptance", "false");
 			f.WriteElementString("licenseUrl", "https://raw.github.com/ericsink/SQLitePCL.raw/master/LICENSE.TXT");
 			f.WriteElementString("projectUrl", "https://github.com/ericsink/SQLitePCL.raw");
@@ -3791,7 +3399,7 @@ public static class gen
 			f.WriteElementString("description", "This 'batteries-included' bundle brings in SQLitePCLRaw.core and the necessary stuff for certain common use cases.  Call SQLitePCL.Batteries.Init().  Policy of this bundle: .no SQLite library included, uses winsqlite3.dll");
 			f.WriteElementString("authors", "Eric Sink");
 			f.WriteElementString("owners", "Eric Sink");
-			f.WriteElementString("copyright", "Copyright 2014-2017 Zumero, LLC");
+			f.WriteElementString("copyright", "Copyright 2014-2018 Zumero, LLC");
 			f.WriteElementString("requireLicenseAcceptance", "false");
 			f.WriteElementString("licenseUrl", "https://raw.github.com/ericsink/SQLitePCL.raw/master/LICENSE.TXT");
 			f.WriteElementString("projectUrl", "https://github.com/ericsink/SQLitePCL.raw");
@@ -3881,6 +3489,11 @@ public static class gen
         write_bundle_dependency_group(f, env, env, what, true);
     }
 
+    private static void write_bundle_dependency_group(XmlWriter f, string env, string what, bool lib)
+    {
+        write_bundle_dependency_group(f, env, env, what, lib);
+    }
+
     private static void write_bundle_dependency_group(XmlWriter f, string env_target, string env_deps, string what, bool lib)
     {
         // --------
@@ -3890,7 +3503,7 @@ public static class gen
         add_dep_core(f);
 
         if (
-                ((env_deps == "ios_unified") || (env_deps == "ios_classic") || (env_deps == "watchos"))
+                ((env_deps == "ios_unified") || (env_deps == "watchos"))
                 && (what != "sqlite3")
            )
         {
@@ -3926,7 +3539,6 @@ public static class gen
                     f.WriteEndElement(); // dependency
                     break;
                 case "ios_unified":
-                case "ios_classic":
                 case "watchos":
                     f.WriteStartElement("dependency");
                     f.WriteAttributeString("id", string.Format("{0}.lib.e_sqlite3.{1}.static", gen.ROOT_NAME, env_deps));
@@ -3977,7 +3589,6 @@ public static class gen
                     f.WriteEndElement(); // dependency
                     break;
                 case "ios_unified":
-                case "ios_classic":
                 case "watchos":
                     f.WriteStartElement("dependency");
                     f.WriteAttributeString("id", string.Format("{0}.lib.sqlcipher.{1}.static", gen.ROOT_NAME, env_deps));
@@ -4022,77 +3633,26 @@ public static class gen
         f.WriteEndElement(); // group
     }
 
-	private static void gen_nuspec_bundle_zetetic(string top)
-    {
-		string id = string.Format("{0}.bundle_zetetic", gen.ROOT_NAME);
-
-		XmlWriterSettings settings = new XmlWriterSettings();
-		settings.Indent = true;
-		settings.OmitXmlDeclaration = false;
-
-		using (XmlWriter f = XmlWriter.Create(Path.Combine(top, string.Format("{0}.nuspec", id)), settings))
-		{
-			f.WriteStartDocument();
-			f.WriteComment("Automatically generated");
-
-			f.WriteStartElement("package", "http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd");
-
-			f.WriteStartElement("metadata");
-			f.WriteAttributeString("minClientVersion", "2.5"); // TODO 2.8.3 for unified
-
-			f.WriteElementString("id", id);
-			f.WriteElementString("version", NUSPEC_VERSION);
-			f.WriteElementString("title", id);
-			f.WriteElementString("description", "This 'batteries-included' bundle brings in SQLitePCLRaw.core and the necessary stuff for certain common use cases.  Call SQLitePCL.Batteries.Init().  Policy of this bundle: reference the official SQLCipher builds from Zetetic, which are not included in this package");
-			f.WriteElementString("authors", "Eric Sink");
-			f.WriteElementString("owners", "Eric Sink");
-			f.WriteElementString("copyright", "Copyright 2014-2017 Zumero, LLC");
-			f.WriteElementString("requireLicenseAcceptance", "false");
-			f.WriteElementString("licenseUrl", "https://raw.github.com/ericsink/SQLitePCL.raw/master/LICENSE.TXT");
-			f.WriteElementString("projectUrl", "https://github.com/ericsink/SQLitePCL.raw");
-			f.WriteElementString("releaseNotes", NUSPEC_RELEASE_NOTES);
-			f.WriteElementString("summary", "Batteries-included package to bring in SQLitePCL.raw and dependencies");
-			f.WriteElementString("tags", "sqlite pcl database monotouch ios monodroid android wp8 wpa");
-
-			f.WriteStartElement("dependencies");
-
-            write_bundle_dependency_group(f, "android", "android", "sqlcipher", false);
-            write_bundle_dependency_group(f, "ios_unified", "ios_unified", "sqlcipher", false);
-            
-            write_dependency_group(f, "profile111", DEP_CORE);
-            write_dependency_group(f, "profile136", DEP_CORE);
-            write_dependency_group(f, "profile259", DEP_CORE);
-            write_dependency_group(f, "netstandard11", DEP_CORE);
-            write_dependency_group(f, null, DEP_CORE);
-
-			f.WriteEndElement(); // dependencies
-
-			f.WriteEndElement(); // metadata
-
-			f.WriteStartElement("files");
-
-			foreach (config_csproj cfg in projects.items_csproj)
-			{
-				if (cfg.area == "batteries_zetetic")
-				{
-					write_nuspec_file_entry(
-							cfg, 
-							f
-							);
-				}
-			}
-
-			f.WriteEndElement(); // files
-
-			f.WriteEndElement(); // package
-
-			f.WriteEndDocument();
-		}
+	enum SQLCipherBundleKind
+	{
+		Unofficial,
+		Zetetic,
 	}
 
-	private static void gen_nuspec_bundle_sqlcipher(string top)
+	private static void gen_nuspec_bundle_sqlcipher(string top, SQLCipherBundleKind kind)
     {
-		string id = string.Format("{0}.bundle_sqlcipher", gen.ROOT_NAME);
+		string id;
+		switch (kind)
+		{
+			case SQLCipherBundleKind.Unofficial:
+				id = string.Format("{0}.bundle_sqlcipher", gen.ROOT_NAME);
+				break;
+			case SQLCipherBundleKind.Zetetic:
+				id = string.Format("{0}.bundle_zetetic", gen.ROOT_NAME);
+				break;
+			default:
+				throw new NotImplementedException();
+		}
 
 		XmlWriterSettings settings = new XmlWriterSettings();
 		settings.Indent = true;
@@ -4111,10 +3671,20 @@ public static class gen
 			f.WriteElementString("id", id);
 			f.WriteElementString("version", NUSPEC_VERSION);
 			f.WriteElementString("title", id);
-			f.WriteElementString("description", "This 'batteries-included' bundle brings in SQLitePCLRaw.core and the necessary stuff for certain common use cases.  Call SQLitePCL.Batteries.Init().  Policy of this bundle: unofficial open source sqlcipher builds included");
+			switch (kind)
+			{
+				case SQLCipherBundleKind.Unofficial:
+					f.WriteElementString("description", "This 'batteries-included' bundle brings in SQLitePCLRaw.core and the necessary stuff for certain common use cases.  Call SQLitePCL.Batteries.Init().  Policy of this bundle: unofficial open source sqlcipher builds included.  Note that these sqlcipher builds are unofficial and unsupported.  For official sqlcipher builds, contact Zetetic.");
+					break;
+				case SQLCipherBundleKind.Zetetic:
+					f.WriteElementString("description", "This 'batteries-included' bundle brings in SQLitePCLRaw.core and the necessary stuff for certain common use cases.  Call SQLitePCL.Batteries.Init().  Policy of this bundle: reference the official SQLCipher builds from Zetetic, which are not included in this package");
+					break;
+				default:
+					throw new NotImplementedException();
+			}
 			f.WriteElementString("authors", "Eric Sink");
 			f.WriteElementString("owners", "Eric Sink");
-			f.WriteElementString("copyright", "Copyright 2014-2017 Zumero, LLC");
+			f.WriteElementString("copyright", "Copyright 2014-2018 Zumero, LLC");
 			f.WriteElementString("requireLicenseAcceptance", "false");
 			f.WriteElementString("licenseUrl", "https://raw.github.com/ericsink/SQLitePCL.raw/master/LICENSE.TXT");
 			f.WriteElementString("projectUrl", "https://github.com/ericsink/SQLitePCL.raw");
@@ -4124,14 +3694,30 @@ public static class gen
 
 			f.WriteStartElement("dependencies");
 
-            write_bundle_dependency_group(f, "android", "sqlcipher");
-            write_bundle_dependency_group(f, "ios_unified", "sqlcipher");
-            write_bundle_dependency_group(f, "macos", "sqlcipher");
-            // TODO write_bundle_dependency_group(f, "watchos", "sqlcipher");
-            write_bundle_dependency_group(f, "net35", "sqlcipher");
-            write_bundle_dependency_group(f, "net40", "sqlcipher");
-            write_bundle_dependency_group(f, "net45", "sqlcipher");
-            write_bundle_dependency_group(f, "netcoreapp", "netstandard11", "sqlcipher", true);
+			bool lib_deps;
+			switch (kind)
+			{
+				case SQLCipherBundleKind.Unofficial:
+					lib_deps = true;
+					break;
+				case SQLCipherBundleKind.Zetetic:
+					lib_deps = false;
+					break;
+				default:
+					throw new NotImplementedException();
+			}
+
+            write_bundle_dependency_group(f, "android", "sqlcipher", lib_deps);
+            write_bundle_dependency_group(f, "ios_unified", "sqlcipher", lib_deps);
+            write_bundle_dependency_group(f, "macos", "sqlcipher", lib_deps);
+            // TODO write_bundle_dependency_group(f, "watchos", "sqlcipher", lib_deps);
+            write_bundle_dependency_group(f, "net35", "sqlcipher", lib_deps);
+            write_bundle_dependency_group(f, "net40", "sqlcipher", lib_deps);
+            write_bundle_dependency_group(f, "net45", "sqlcipher", lib_deps);
+            write_bundle_dependency_group(f, "netcoreapp", "netstandard11", "sqlcipher", lib_deps);
+            write_bundle_dependency_group(f, "wpa81", "wpa81", "sqlcipher", lib_deps);
+            write_bundle_dependency_group(f, "win8", "win8", "sqlcipher", lib_deps);
+            write_bundle_dependency_group(f, "win81", "win81", "sqlcipher", lib_deps);
             write_bundle_dependency_group(f, "uwp10", "sqlcipher");
             
             write_dependency_group(f, "profile111", DEP_CORE);
@@ -4189,7 +3775,7 @@ public static class gen
 			f.WriteElementString("description", "This 'batteries-included' bundle brings in SQLitePCLRaw.core and the necessary stuff for certain common use cases.  Call SQLitePCL.Batteries.Init().  Policy of this bundle: e_sqlite3 included");
 			f.WriteElementString("authors", "Eric Sink");
 			f.WriteElementString("owners", "Eric Sink");
-			f.WriteElementString("copyright", "Copyright 2014-2017 Zumero, LLC");
+			f.WriteElementString("copyright", "Copyright 2014-2018 Zumero, LLC");
 			f.WriteElementString("requireLicenseAcceptance", "false");
 			f.WriteElementString("licenseUrl", "https://raw.github.com/ericsink/SQLitePCL.raw/master/LICENSE.TXT");
 			f.WriteElementString("projectUrl", "https://github.com/ericsink/SQLitePCL.raw");
@@ -4272,7 +3858,7 @@ public static class gen
 			f.WriteElementString("description", "This 'batteries-included' bundle brings in SQLitePCLRaw.core and the necessary stuff for certain common use cases.  Call SQLitePCL.Batteries.Init().  Policy of this bundle: iOS=system SQLite, others=e_sqlite3 included");
 			f.WriteElementString("authors", "Eric Sink");
 			f.WriteElementString("owners", "Eric Sink");
-			f.WriteElementString("copyright", "Copyright 2014-2017 Zumero, LLC");
+			f.WriteElementString("copyright", "Copyright 2014-2018 Zumero, LLC");
 			f.WriteElementString("requireLicenseAcceptance", "false");
 			f.WriteElementString("licenseUrl", "https://raw.github.com/ericsink/SQLitePCL.raw/master/LICENSE.TXT");
 			f.WriteElementString("projectUrl", "https://github.com/ericsink/SQLitePCL.raw");
@@ -4385,19 +3971,15 @@ public static class gen
 			f.WriteAttributeString("BeforeTargets", "ResolveAssemblyReferences");
 			f.WriteAttributeString("Condition", " '$(OS)' == 'Windows_NT' ");
 
-			foreach (config_sqlite3 other in projects.items_sqlite3)
+			var front = projects.rid_front_half(toolset);
+			Action<string> write_item = (cpu) =>
 			{
-				if (other.toolset != toolset)
-				{
-					continue;
-				}
-
 				f.WriteStartElement("ItemGroup");
-				f.WriteAttributeString("Condition", string.Format(" '$(Platform.ToLower())' == '{0}' ", other.cpu.ToLower()));
+				f.WriteAttributeString("Condition", string.Format(" '$(Platform.ToLower())' == '{0}' ", cpu.ToLower()));
 
 				f.WriteStartElement("Content");
 				// TODO call other.get_products() instead of hard-coding the sqlite3.dll name here
-				f.WriteAttributeString("Include", string.Format("$(MSBuildThisFileDirectory)..\\{0}", Path.Combine(other.get_nuget_target_path(), "e_sqlite3.dll")));
+				f.WriteAttributeString("Include", string.Format("$(MSBuildThisFileDirectory)..\\runtimes\\{0}-{1}\\native\\e_sqlite3.dll", front, cpu));
 				// TODO link
 				// TODO condition/exists ?
 				f.WriteElementString("CopyToOutputDirectory", "PreserveNewest");
@@ -4405,6 +3987,40 @@ public static class gen
 				f.WriteEndElement(); // Content
 
 				f.WriteEndElement(); // ItemGroup
+			};
+
+			switch (toolset)
+			{
+				case "v110_xp":
+					write_item("x86");
+					write_item("x64");
+					write_item("arm");
+					break;
+				case "v110":
+					write_item("arm");
+					write_item("x64");
+					write_item("x86");
+					break;
+				case "v120":
+					write_item("arm");
+					write_item("x64");
+					write_item("x86");
+					break;
+				case "v140":
+					write_item("arm");
+					write_item("x64");
+					write_item("x86");
+					break;
+				case "v110_wp80":
+					write_item("arm");
+					write_item("x86");
+					break;
+				case "v120_wp81":
+					write_item("arm");
+					write_item("x86");
+					break;
+				default:
+					throw new NotImplementedException();
 			}
 
 			f.WriteEndElement(); // Target
@@ -4439,17 +4055,20 @@ public static class gen
 
 			f.WriteStartElement("ItemGroup");
 			f.WriteAttributeString("Condition", " '$(OS)' == 'Windows_NT' ");
-			foreach (config_sqlite3 other in projects.items_sqlite3)
 			{
-				if (toolset != other.toolset)
-				{
-					continue;
-				}
-
 				f.WriteStartElement("Content");
-				f.WriteAttributeString("Include", string.Format("$(MSBuildThisFileDirectory)..\\..\\{0}", Path.Combine(other.get_nuget_target_path(), "e_sqlite3.dll")));
+				f.WriteAttributeString("Include", string.Format("$(MSBuildThisFileDirectory)..\\..\\{0}", Path.Combine("runtimes\\win-x86\\native", "e_sqlite3.dll")));
 				// TODO condition/exists ?
-				f.WriteElementString("Link", string.Format("{0}\\e_sqlite3.dll", other.cpu.ToLower()));
+				f.WriteElementString("Link", string.Format("{0}\\e_sqlite3.dll", "x86"));
+				f.WriteElementString("CopyToOutputDirectory", "PreserveNewest");
+				f.WriteElementString("Pack", "false");
+				f.WriteEndElement(); // Content
+			}
+			{
+				f.WriteStartElement("Content");
+				f.WriteAttributeString("Include", string.Format("$(MSBuildThisFileDirectory)..\\..\\{0}", Path.Combine("runtimes\\win-x64\\native", "e_sqlite3.dll")));
+				// TODO condition/exists ?
+				f.WriteElementString("Link", string.Format("{0}\\e_sqlite3.dll", "x64"));
 				f.WriteElementString("CopyToOutputDirectory", "PreserveNewest");
 				f.WriteElementString("Pack", "false");
 				f.WriteEndElement(); // Content
@@ -4493,14 +4112,14 @@ public static class gen
 			f.WriteAttributeString("Condition", " '$(OS)' == 'Windows_NT' ");
 
 			f.WriteStartElement("Content");
-			f.WriteAttributeString("Include", string.Format("$(MSBuildThisFileDirectory)..\\..\\runtimes\\win7-x86\\native\\{0}", filename));
+			f.WriteAttributeString("Include", string.Format("$(MSBuildThisFileDirectory)..\\..\\runtimes\\win-x86\\native\\{0}", filename));
 			f.WriteElementString("Link", string.Format("{0}\\{1}", "x86", filename));
 			f.WriteElementString("CopyToOutputDirectory", "PreserveNewest");
             f.WriteElementString("Pack", "false");
 			f.WriteEndElement(); // Content
 
 			f.WriteStartElement("Content");
-			f.WriteAttributeString("Include", string.Format("$(MSBuildThisFileDirectory)..\\..\\runtimes\\win7-x64\\native\\{0}", filename));
+			f.WriteAttributeString("Include", string.Format("$(MSBuildThisFileDirectory)..\\..\\runtimes\\win-x64\\native\\{0}", filename));
 			f.WriteElementString("Link", string.Format("{0}\\{1}", "x64", filename));
 			f.WriteElementString("CopyToOutputDirectory", "PreserveNewest");
             f.WriteElementString("Pack", "false");
@@ -4521,7 +4140,7 @@ public static class gen
 		}
 	}
 
-	private static void gen_nuget_targets_osx(string top, string tname, string filename)
+	private static void gen_nuget_targets_osx(string top, string tname, string filename, bool forxammac)
 	{
 		XmlWriterSettings settings = new XmlWriterSettings();
 		settings.Indent = true;
@@ -4543,11 +4162,23 @@ public static class gen
 			f.WriteStartElement("ItemGroup");
 			f.WriteAttributeString("Condition", " '$(OS)' == 'Unix' AND Exists('/Library/Frameworks') ");
 
-			f.WriteStartElement("NativeReference");
-			f.WriteAttributeString("Include", string.Format("$(MSBuildThisFileDirectory)..\\..\\runtimes\\osx-x64\\native\\{0}", filename));
-			f.WriteElementString("Kind", "Dynamic");
-			f.WriteElementString("SmartLink", "False");
-			f.WriteEndElement(); // NativeReference
+			if (forxammac)
+			{
+				f.WriteStartElement("NativeReference");
+				f.WriteAttributeString("Include", string.Format("$(MSBuildThisFileDirectory)..\\..\\runtimes\\osx-x64\\native\\{0}", filename));
+				f.WriteElementString("Kind", "Dynamic");
+				f.WriteElementString("SmartLink", "False");
+				f.WriteEndElement(); // NativeReference
+			}
+			else
+			{
+				f.WriteStartElement("Content");
+				f.WriteAttributeString("Include", string.Format("$(MSBuildThisFileDirectory)..\\..\\runtimes\\osx-x64\\native\\{0}", filename));
+				f.WriteElementString("Link", filename);
+				f.WriteElementString("CopyToOutputDirectory", "PreserveNewest");
+				f.WriteElementString("Pack", "false");
+				f.WriteEndElement(); // Content
+			}
 
 			f.WriteEndElement(); // ItemGroup
 
@@ -4790,6 +4421,7 @@ public static class gen
 
 		string root = Directory.GetCurrentDirectory(); // assumes that gen_build.exe is being run from the root directory of the project
 		string top = Path.Combine(root, "bld");
+		var cb_bin = Path.GetFullPath(Path.Combine(root, "..", "cb", "bld", "bin"));
 
 		// --------------------------------
 		// create the bld directory
@@ -4863,11 +4495,6 @@ public static class gen
 		// --------------------------------
 		// assign all the guids
 
-		foreach (config_sqlite3 cfg in projects.items_sqlite3)
-		{
-			cfg.guid = "{" + Guid.NewGuid().ToString().ToUpper() + "}";
-		}
-
 		foreach (config_cppinterop cfg in projects.items_cppinterop)
 		{
 			cfg.guid = "{" + Guid.NewGuid().ToString().ToUpper() + "}";
@@ -4904,24 +4531,19 @@ public static class gen
 		// --------------------------------
 		// generate all the project files
 
-		foreach (config_sqlite3 cfg in projects.items_sqlite3)
-		{
-			gen_sqlite3(cfg, root, top);
-		}
-
 		foreach (config_cppinterop cfg in projects.items_cppinterop)
 		{
-			gen_cppinterop(cfg, root, top);
+			gen_cppinterop(cfg, root, top, cb_bin);
 		}
 
 		foreach (config_csproj cfg in projects.items_csproj)
 		{
-			gen_csproj(cfg, root, top);
+			gen_csproj(cfg, root, top, cb_bin);
 		}
 
 		foreach (config_csproj cfg in projects.items_test)
 		{
-			gen_csproj(cfg, root, top);
+			gen_csproj(cfg, root, top, cb_bin);
 		}
 
 		foreach (config_testapp cfg in projects.items_testapp)
@@ -4942,8 +4564,8 @@ public static class gen
         gen_nuspec_bundle_green(top);
         gen_nuspec_bundle_e_sqlite3(top);
         gen_nuspec_bundle_winsqlite3(top);
-        gen_nuspec_bundle_sqlcipher(top);
-        gen_nuspec_bundle_zetetic(top);
+        gen_nuspec_bundle_sqlcipher(top, SQLCipherBundleKind.Unofficial);
+        gen_nuspec_bundle_sqlcipher(top, SQLCipherBundleKind.Zetetic);
         gen_nuspec_provider_wp80(top, root, "e_sqlite3");
         gen_nuspec_tests(top);
 
@@ -4959,21 +4581,21 @@ public static class gen
 		{
             if (cfg.area == "lib")
             {
-                gen_nuspec_embedded(top, root, cfg);
+                gen_nuspec_embedded(top, cfg);
             }
 		}
 
 		foreach (config_esqlite3 cfg in projects.items_esqlite3)
 		{
-			gen_nuspec_esqlite3(top, root, cfg);
+			gen_nuspec_esqlite3(top, cb_bin, cfg);
 		}
 
-		gen_nuspec_e_sqlite3(top, root, "osx");
-		gen_nuspec_e_sqlite3(top, root, "linux");
+		gen_nuspec_e_sqlite3(top, cb_bin, "osx");
+		gen_nuspec_e_sqlite3(top, cb_bin, "linux");
 
-		gen_nuspec_sqlcipher(top, root, "windows");
-		gen_nuspec_sqlcipher(top, root, "osx");
-		gen_nuspec_sqlcipher(top, root, "linux");
+		gen_nuspec_sqlcipher(top, cb_bin, "windows");
+		gen_nuspec_sqlcipher(top, cb_bin, "osx");
+		gen_nuspec_sqlcipher(top, cb_bin, "linux");
 
 		using (TextWriter tw = new StreamWriter(Path.Combine(top, "build.ps1")))
 		{

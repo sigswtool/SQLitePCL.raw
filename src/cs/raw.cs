@@ -296,6 +296,7 @@ namespace SQLitePCL
 
         static public int sqlite3_close_v2(sqlite3 db)
         {
+			if (db.already_disposed) return 0;
             int rc = _imp.sqlite3_close_v2(db.ptr);
             db.set_already_disposed();
             return rc;
@@ -303,6 +304,7 @@ namespace SQLitePCL
 
         static public int sqlite3_close(sqlite3 db)
         {
+			if (db.already_disposed) return 0;
             int rc = _imp.sqlite3_close(db.ptr);
             db.set_already_disposed();
             return rc;
@@ -366,6 +368,16 @@ namespace SQLitePCL
         static public int sqlite3_create_function(sqlite3 db, string name, int nArg, object v, delegate_function_aggregate_step func_step, delegate_function_aggregate_final func_final)
         {
             return _imp.sqlite3_create_function(db.ptr, name, nArg, v, func_step, func_final);
+        }
+
+        static public int sqlite3_create_function(sqlite3 db, string name, int nArg, int flags, object v, delegate_function_scalar func)
+        {
+            return _imp.sqlite3_create_function(db.ptr, name, nArg, flags, v, func);
+        }
+
+        static public int sqlite3_create_function(sqlite3 db, string name, int nArg, int flags, object v, delegate_function_aggregate_step func_step, delegate_function_aggregate_final func_final)
+        {
+            return _imp.sqlite3_create_function(db.ptr, name, nArg, flags, v, func_step, func_final);
         }
 
         static public int sqlite3_db_status(sqlite3 db, int op, out int current, out int highest, int resetFlg)
@@ -530,6 +542,7 @@ namespace SQLitePCL
 
         static public int sqlite3_finalize(sqlite3_stmt stmt)
         {
+			if (stmt.already_disposed) return 0;
             int rc = _imp.sqlite3_finalize(stmt.ptr);
             stmt.set_already_disposed();
             return rc;
@@ -856,6 +869,7 @@ namespace SQLitePCL
 
         static public int sqlite3_backup_finish(sqlite3_backup backup)
         {
+			if (backup.already_disposed) return 0;
             int rc = _imp.sqlite3_backup_finish(backup.ptr);
             backup.set_already_disposed();
             return rc;
@@ -894,6 +908,7 @@ namespace SQLitePCL
 
         static public int sqlite3_blob_close(sqlite3_blob blob)
         {
+			if (blob.already_disposed) return 0;
             int rc = _imp.sqlite3_blob_close(blob.ptr);
             blob.set_already_disposed();
             return rc;
